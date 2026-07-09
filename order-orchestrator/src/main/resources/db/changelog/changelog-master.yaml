@@ -3,3 +3,5 @@ databaseChangeLog:
       file: classpath:db/changelog/sql/001-init-orders-table.sql
   - include:
       file: classpath:db/changelog/sql/002-add-columns-to-orders-table.sql
+  - include:
+      file: classpath:db/changelog/sql/003-init-tasks-table.sql

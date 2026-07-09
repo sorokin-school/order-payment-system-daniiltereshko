@@ -1,19 +1,23 @@
 package dev.sorokin.domain;
 
 import dev.sorokin.api.OrderCreateRequestDto;
+import dev.sorokin.async.task.service.TaskService;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderService {
 
+    private final TaskService taskService;
     private final OrderJpaRepository orderRepository;
 
+    @Transactional
     public OrderEntity createOrder(
             OrderCreateRequestDto requestDto
     ) {
@@ -21,11 +25,14 @@ public class OrderService {
                 .address(requestDto.address())
                 .build();
 
-        // todo асинхронная обработка заказа (создать таску)
+        var savedOrder = orderRepository.save(entity);
+        log.info("Order created with id: {}", savedOrder.getId());
 
-        return orderRepository.save(entity);
+        taskService.createTaskForOrder(entity);
+        return savedOrder;
     }
 
+    @Transactional(readOnly = true)
     public Optional<OrderEntity> findOrder(UUID id) {
         return orderRepository.findById(id);
     }
