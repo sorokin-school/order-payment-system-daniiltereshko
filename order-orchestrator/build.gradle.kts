@@ -22,6 +22,7 @@ dependencies {
 
     // additional libs
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
+    implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.15.4")
     implementation("org.liquibase:liquibase-core")
     runtimeOnly("org.postgresql:postgresql")
 
