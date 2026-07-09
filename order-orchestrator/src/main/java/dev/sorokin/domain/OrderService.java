@@ -2,6 +2,7 @@ package dev.sorokin.domain;
 
 import dev.sorokin.api.OrderCreateRequestDto;
 import dev.sorokin.async.task.service.TaskService;
+import dev.sorokin.domain.type.PaymentStatus;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -23,10 +24,13 @@ public class OrderService {
     ) {
         var entity = OrderEntity.builder()
                 .address(requestDto.address())
+                .paymentStatus(PaymentStatus.NEW)
+                .clientEstimate(requestDto.clientEstimate())
                 .build();
 
         var savedOrder = orderRepository.save(entity);
-        log.info("Order created with id: {}", savedOrder.getId());
+        log.info("Order created with id={}, clientEstimate={}",
+                savedOrder.getId(), savedOrder.getClientEstimate());
 
         taskService.createTaskForOrder(entity);
         return savedOrder;

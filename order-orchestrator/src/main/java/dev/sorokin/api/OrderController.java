@@ -44,8 +44,11 @@ public class OrderController {
 
     private OrderDto mapEntityToDto(OrderEntity order) {
         return OrderDto.builder()
-                .id(order.getId())
+                .orderId(order.getId())
                 .address(order.getAddress())
+                .clientEstimate(order.getClientEstimate())
+                .finalAmount(order.getFinalAmount())
+                .capturedAmount(order.getCapturedAmount())
                 .build();
     }
 }
