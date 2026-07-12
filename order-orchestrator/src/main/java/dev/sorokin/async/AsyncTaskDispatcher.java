@@ -1,7 +1,6 @@
 package dev.sorokin.async;
 
 import dev.sorokin.async.config.properties.TaskAsyncProperties;
-import dev.sorokin.async.task.ErrorTypeClassifier;
 import dev.sorokin.async.task.entity.TaskEntity;
 import dev.sorokin.async.task.repository.TaskJpaRepository;
 import dev.sorokin.async.task.type.TaskExecutionStatus;

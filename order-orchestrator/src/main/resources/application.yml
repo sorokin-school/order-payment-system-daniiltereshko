@@ -19,6 +19,11 @@ spring:
         arguments: -v
 
 app:
+  clients:
+    payment:
+      url: ${APP_CLIENTS_PAYMENT_URL:http://localhost:8081}
+    warehouse:
+      url: ${APP_CLIENTS_WAREHOUSE_URL:http://localhost:8081}
   async:
     task:
       retry-delay-seconds:  ${APP_TASK_RETRY_DELAY_SECONDS:10}
@@ -36,12 +41,7 @@ app:
         await-termination-seconds: ${APP_TASK_THREAD_POOL_AWAIT_TERMINATION_SECONDS:120}
         thread-name-prefix: ${APP_TASK_THREAD_POOL_THREAD_NAME_PREFIX:async-task-pool-}
 
-
-
 # настройки Swagger
 springdoc:
   swagger-ui:
     path: /swagger-ui
-
-payment:
-  stub-url: ${PAYMENT_STUB_URL:http://localhost:8081}

@@ -1,4 +1,4 @@
-package dev.sorokin.async.task;
+package dev.sorokin.async;
 
 import dev.sorokin.async.config.properties.TaskAsyncProperties;
 import dev.sorokin.async.task.type.TaskExecutionStatus;
