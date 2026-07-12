@@ -18,6 +18,15 @@ spring:
         command: down                     # полностью закрывает контейнеры
         arguments: -v
 
+app:
+  async:
+    task:
+      scheduler:
+        batch-size: ${APP_TASK_BATCH_SIZE:100}
+        fixed-delay-ms: ${APP_TASK_PROCESSING_DELAY_MS:1000}
+        in-progress-timeout-minutes: ${APP_TASK_IN_PROGRESS_TIMEOUT_MINUTES:5}
+
+
 # настройки Swagger
 springdoc:
   swagger-ui:
