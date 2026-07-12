@@ -2,9 +2,11 @@ package dev.sorokin.async.task.service;
 
 import dev.sorokin.async.task.entity.TaskEntity;
 import dev.sorokin.async.task.repository.TaskJpaRepository;
+import dev.sorokin.async.task.type.TaskStatus;
 import dev.sorokin.domain.OrderEntity;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,7 +29,18 @@ public class TaskService {
     }
 
     @Transactional
-    public List<TaskEntity> fetchTasksForProcessing(final int batchSize, final OffsetDateTime inProgressTimeoutThreshold) {
-        return repository.findTasksForProcessing(inProgressTimeoutThreshold, batchSize);
+    public List<TaskEntity> claimTasks(final int batchSize, final OffsetDateTime inProgressTimeoutThreshold) {
+        List<UUID> lockedIds = repository.lockTaskIdsForProcessing(inProgressTimeoutThreshold, batchSize);
+        if (lockedIds.isEmpty()) {
+            return List.of();
+        }
+        List<TaskEntity> batch = repository.findAllByIdInWithOrder(lockedIds);
+
+        for (TaskEntity task : batch) {
+            task.setStatus(TaskStatus.IN_PROGRESS);
+            task.setAttempts(task.getAttempts() + 1);
+        }
+
+        return batch;
     }
 }

@@ -1,6 +1,7 @@
 package dev.sorokin.async.scheduler;
 
-import dev.sorokin.async.config.TaskAsyncProperties;
+import dev.sorokin.async.AsyncTaskDispatcher;
+import dev.sorokin.async.config.properties.TaskAsyncSchedulerProperties;
 import dev.sorokin.async.task.entity.TaskEntity;
 import dev.sorokin.async.task.service.TaskService;
 import java.time.OffsetDateTime;
@@ -16,21 +17,26 @@ import org.springframework.stereotype.Component;
 public class AsyncTaskScheduler {
 
     private final TaskService tasksService;
-    private final TaskAsyncProperties taskAsyncProperties;
+    private final AsyncTaskDispatcher taskDispatcher;
+    private final TaskAsyncSchedulerProperties taskAsyncSchedulerProperties;
 
     @Scheduled(fixedDelayString = "${app.async.task.scheduler.fixed-delay-ms}")
     public void process() {
-        final var batchSize = taskAsyncProperties.getBatchSize();
-        final var inProgressTimeoutThreshold = OffsetDateTime.now()
-                .minusMinutes(taskAsyncProperties.getInProgressTimeoutMinutes());
-
-        List<TaskEntity> batch = tasksService.fetchTasksForProcessing(batchSize, inProgressTimeoutThreshold);
+        List<TaskEntity> batch = fetchTaskForProcessing();
         if (batch.isEmpty()) {
             return;
         }
 
         for (TaskEntity task : batch) {
-            log.info("Get task with id='{}'", task.getId());
+            taskDispatcher.dispatch(task);
         }
+    }
+
+    private List<TaskEntity> fetchTaskForProcessing() {
+        final var batchSize = taskAsyncSchedulerProperties.getBatchSize();
+        final var inProgressTimeoutThreshold = OffsetDateTime.now()
+                .minusMinutes(taskAsyncSchedulerProperties.getInProgressTimeoutMinutes());
+
+        return tasksService.claimTasks(batchSize, inProgressTimeoutThreshold);
     }
 }

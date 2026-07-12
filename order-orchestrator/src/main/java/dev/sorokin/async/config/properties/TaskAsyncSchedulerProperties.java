@@ -1,4 +1,4 @@
-package dev.sorokin.async.config;
+package dev.sorokin.async.config.properties;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -11,7 +11,7 @@ import org.springframework.validation.annotation.Validated;
 @Setter
 @Validated
 @ConfigurationProperties(prefix = "app.async.task.scheduler")
-public class TaskAsyncProperties {
+public class TaskAsyncSchedulerProperties {
 
     @Min(100)
     @NotNull
