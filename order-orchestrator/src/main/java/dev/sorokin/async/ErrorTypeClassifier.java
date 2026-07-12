@@ -22,7 +22,7 @@ public class ErrorTypeClassifier {
 
     @PostConstruct
     public void init() {
-        retryableExceptionClasses = loadClasses(properties.getRetyableExceptions());
+        retryableExceptionClasses = loadClasses(properties.getRetryableExceptions());
         nonRetryableExceptionClasses = loadClasses(properties.getNonRetryableExceptions());
 
         log.info("Loaded retryable exceptions: {}", retryableExceptionClasses.size());

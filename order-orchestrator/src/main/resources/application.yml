@@ -1,10 +1,14 @@
 spring:
   application:
     name: order-orchestrator
+  jpa:
+    open-in-view: false
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/orders}
     username: ${SPRING_DATASOURCE_USERNAME:user}
     password: ${SPRING_DATASOURCE_PASSWORD:pass}
+    hikari:
+      maximum-pool-size: ${MAX_POOL_SIZE:20}
   liquibase:
     change-log: classpath:/db/changelog/changelog-master.yaml
   docker:
@@ -40,6 +44,14 @@ app:
         queue-capacity: ${APP_TASK_THREAD_POOL_QUEUE_CAPACITY:1000}
         await-termination-seconds: ${APP_TASK_THREAD_POOL_AWAIT_TERMINATION_SECONDS:120}
         thread-name-prefix: ${APP_TASK_THREAD_POOL_THREAD_NAME_PREFIX:async-task-pool-}
+    io:
+      thread-pool:
+        core-pool-size: ${APP_IO_THREAD_POOL_CORE_POOL_SIZE:5}
+        max-pool-size: ${APP_IO_THREAD_POOL_MAX_POOL_SIZE:25}
+        keep-alive-seconds: ${APP_IO_THREAD_POOL_KEEP_ALIVE_SECONDS:30}
+        queue-capacity: ${APP_IO_THREAD_POOL_QUEUE_CAPACITY:100}
+        await-termination-seconds: ${APP_IO_THREAD_POOL_AWAIT_TERMINATION_SECONDS:120}
+        thread-name-prefix: ${APP_IO_THREAD_POOL_THREAD_NAME_PREFIX:async-io-pool-}
 
 # настройки Swagger
 springdoc:

@@ -13,7 +13,7 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "app.async.task.scheduler")
 public class TaskAsyncSchedulerProperties {
 
-    @Min(100)
+    @Min(10)
     @NotNull
     private Long fixedDelayMs = 5000L;
 

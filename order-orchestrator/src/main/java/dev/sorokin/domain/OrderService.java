@@ -19,6 +19,11 @@ public class OrderService {
     private final OrderJpaRepository orderRepository;
 
     @Transactional
+    public void saveOrder(OrderEntity order) {
+        orderRepository.save(order);
+    }
+
+    @Transactional
     public OrderEntity createOrder(
             OrderCreateRequestDto requestDto
     ) {

@@ -18,7 +18,7 @@ public class TaskAsyncProperties {
     @NotNull
     private Long retryDelaySeconds = 10L;
 
-    private List<String> retyableExceptions;
+    private List<String> retryableExceptions;
 
     private List<String> nonRetryableExceptions;
 

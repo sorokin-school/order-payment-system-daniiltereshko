@@ -49,6 +49,7 @@ public class OrderController {
                 .clientEstimate(order.getClientEstimate())
                 .finalAmount(order.getFinalAmount())
                 .capturedAmount(order.getCapturedAmount())
+                .paymentStatus(order.getPaymentStatus())
                 .build();
     }
 }
