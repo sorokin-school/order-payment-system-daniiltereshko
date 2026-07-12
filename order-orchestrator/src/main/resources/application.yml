@@ -3,6 +3,16 @@ spring:
     name: order-orchestrator
   jpa:
     open-in-view: false
+  cloud:
+    openfeign:
+      httpclient:
+        hc5:
+          enabled: ${FEIGN_HTTPCLIENT_HC5_ENABLED:true}
+        max-connections: ${FEIGN_HTTPCLIENT_MAX_CONNECTIONS:200}
+        max-connections-per-route: ${FEIGN_HTTPCLIENT_MAX_CONNECTIONS_PER_ROUTE:50}
+        connection-timeout: ${FEIGN_HTTPCLIENT_CONNECTION_TIMEOUT:5000}
+        time-to-live: ${FEIGN_HTTPCLIENT_TIME_TO_LIVE:300}
+        time-to-live-unit: ${FEIGN_HTTPCLIENT_TIME_TO_LIVE_UNIT:SECONDS}
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/orders}
     username: ${SPRING_DATASOURCE_USERNAME:user}
