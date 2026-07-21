@@ -1,13 +1,12 @@
 -- changeset add-columns-to-orders-table-:002
 
-CREATE TYPE payment_status_enum AS ENUM ('NEW', 'AUTHORIZATION_FAILED', 'PRICE_CHANGED_FAILED', 'SUCCEED_PAID');
-
 ALTER TABLE orders
-ADD COLUMN client_estimate DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+ADD COLUMN client_estimate DECIMAL(10, 2) NOT NULL,
 ADD COLUMN final_amount DECIMAL(10, 2),
 ADD COLUMN authorized_amount DECIMAL(10, 2),
 ADD COLUMN captured_amount DECIMAL(10, 2),
-ADD COLUMN payment_status payment_status_enum NOT NULL DEFAULT 'NEW';
+ADD COLUMN payment_status text NOT NULL DEFAULT 'NEW',
+ADD COLUMN authorization_id uuid;
 
 COMMENT ON COLUMN orders.client_estimate IS 'Оценка стоимости от клиента';
 COMMENT ON COLUMN orders.final_amount IS 'Итоговая сумма заказа';

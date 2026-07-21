@@ -1,80 +1,70 @@
 package dev.sorokin.async;
 
-import dev.sorokin.async.config.properties.TaskAsyncProperties;
 import dev.sorokin.async.task.entity.TaskEntity;
-import dev.sorokin.async.task.repository.TaskJpaRepository;
+import dev.sorokin.async.task.service.TaskCompletionService;
 import dev.sorokin.async.task.type.TaskExecutionStatus;
-import dev.sorokin.async.task.type.TaskStatus;
-import java.time.OffsetDateTime;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import lombok.RequiredArgsConstructor;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.RejectedExecutionException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class AsyncTaskDispatcher {
 
-    private final TaskJpaRepository repository;
+    private final TaskCompletionService taskCompletionService;
     private final AsyncTaskProcessor processor;
-    private final TaskAsyncProperties properties;
     private final ErrorTypeClassifier errorTypeClassifier;
     private final ThreadPoolTaskExecutor taskThreadPool;
 
-    public void dispatch(TaskEntity task) {
-        CompletableFuture.supplyAsync(() -> processor.process(task), taskThreadPool)
-                .thenAccept(status -> handleTaskExecutionStatus(task, status))
-                .exceptionally(ex -> handlePipelineException(task, ex));
+    public AsyncTaskDispatcher(
+            TaskCompletionService taskCompletionService,
+            AsyncTaskProcessor processor,
+            ErrorTypeClassifier errorTypeClassifier,
+            @Qualifier("taskThreadPool") ThreadPoolTaskExecutor taskThreadPool
+    ) {
+        this.taskCompletionService = taskCompletionService;
+        this.processor = processor;
+        this.errorTypeClassifier = errorTypeClassifier;
+        this.taskThreadPool = taskThreadPool;
     }
 
-    private void handleTaskExecutionStatus(TaskEntity task, TaskExecutionStatus status) {
-        log.info("Start handling task execution status: id={}, status={}, attempts={}",
-                task.getId(), status, task.getAttempts());
-        switch (status) {
-            case SUCCEEDED -> handleSucceededStatus(task, status);
-            case FAILED_RETRYABLE -> handleFailedRetryableStatus(task, status);
-            case FAILED_NON_RETRYABLE -> handleFailedNonRetryableStatus(task, status);
+    public void dispatch(TaskEntity task) {
+        try {
+            CompletableFuture.runAsync(() -> processor.process(task), taskThreadPool)
+                    .exceptionally(ex -> handlePipelineException(task, unwrap(ex)));
+        } catch (RejectedExecutionException ex) {
+            handleDispatchRejection(task, ex);
         }
     }
 
-    private void handleSucceededStatus(TaskEntity task, TaskExecutionStatus status) {
-        task.setStatus(TaskStatus.SUCCEEDED);
-        task.setNextAttemptAt(null);
-
-        repository.save(task);
-
-        log.info("Task completed successfully: taskId={}, status={}, attempts={}",
-                task.getId(), status, task.getAttempts());
-    }
-
-    private void handleFailedRetryableStatus(TaskEntity task, TaskExecutionStatus status) {
-        task.setStatus(TaskStatus.FAILED_RETRYABLE);
-        task.setNextAttemptAt(OffsetDateTime.now().plusSeconds(properties.getRetryDelaySeconds()));
-
-        repository.save(task);
-
-        log.warn("Task failed (retryable): taskId={}, status={}, attempts={}, nextAttemptAt={}",
-                task.getId(), status, task.getAttempts(), task.getNextAttemptAt());
-    }
-
-    private void handleFailedNonRetryableStatus(TaskEntity task, TaskExecutionStatus status) {
-        task.setStatus(TaskStatus.FAILED_NON_RETRYABLE);
-        task.setNextAttemptAt(null);
-
-        repository.save(task);
-
-        log.error("Task failed (non-retryable): taskId={}, status={}, attempts={}",
-                task.getId(), status, task.getAttempts());
+    private void handleDispatchRejection(TaskEntity task, RejectedExecutionException ex) {
+        log.warn("Task dispatch rejected, returning to retry queue: taskId={}, error={}",
+                task.getId(), ex.getMessage());
+        taskCompletionService.completeRetryable(task.getId());
     }
 
     private Void handlePipelineException(TaskEntity task, Throwable ex) {
         log.error("Task execution failed: taskId={}, error={}", task.getId(), ex.getMessage(), ex);
-
-        TaskExecutionStatus taskExecutionStatus = errorTypeClassifier.classify(ex);
-        handleTaskExecutionStatus(task, taskExecutionStatus);
-
+        TaskExecutionStatus status = errorTypeClassifier.classify(ex);
+        UUID taskId = task.getId();
+        UUID orderId = task.getOrder().getId();
+        switch (status) {
+            case SUCCEEDED -> throw new IllegalStateException("Unexpected SUCCEEDED from exception classifier");
+            case FAILED_RETRYABLE -> taskCompletionService.completeRetryable(taskId);
+            case FAILED_NON_RETRYABLE -> taskCompletionService.completeNonRetryable(taskId, orderId, null);
+        }
         return null;
+    }
+
+    private static Throwable unwrap(Throwable ex) {
+        if (ex instanceof CompletionException completionException && completionException.getCause() != null) {
+            return completionException.getCause();
+        }
+        return ex;
     }
 }

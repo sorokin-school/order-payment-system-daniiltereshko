@@ -17,25 +17,25 @@ public class TaskThreadPoolProperties {
     @Min(1)
     @Max(100)
     @NotNull
-    private Integer corePoolSize = 10;
+    private Integer corePoolSize;
 
     @Min(1)
     @Max(200)
     @NotNull
-    private Integer maxPoolSize = 50;
+    private Integer maxPoolSize;
 
     @NotNull
-    private Integer keepAliveSeconds = 60;
+    private Integer keepAliveSeconds;
 
     @Min(10)
     @NotNull
-    private Integer queueCapacity = 1000;
+    private Integer queueCapacity;
 
     @Min(15)
     @Max(600)
     @NotNull
-    private Integer awaitTerminationSeconds = 120;
+    private Integer awaitTerminationSeconds;
 
     @NotNull
-    private String threadNamePrefix = "async-task-pool-";
+    private String threadNamePrefix;
 }

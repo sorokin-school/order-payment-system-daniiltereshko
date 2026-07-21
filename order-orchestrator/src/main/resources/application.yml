@@ -5,12 +5,17 @@ spring:
     open-in-view: false
   cloud:
     openfeign:
+      client:
+        config:
+          default:
+            connectTimeout: ${FEIGN_CLIENT_CONNECT_TIMEOUT:1000}
+            readTimeout: ${FEIGN_CLIENT_READ_TIMEOUT:3000}
       httpclient:
         hc5:
           enabled: ${FEIGN_HTTPCLIENT_HC5_ENABLED:true}
         max-connections: ${FEIGN_HTTPCLIENT_MAX_CONNECTIONS:200}
-        max-connections-per-route: ${FEIGN_HTTPCLIENT_MAX_CONNECTIONS_PER_ROUTE:50}
-        connection-timeout: ${FEIGN_HTTPCLIENT_CONNECTION_TIMEOUT:5000}
+        max-connections-per-route: ${FEIGN_HTTPCLIENT_MAX_CONNECTIONS_PER_ROUTE:100}
+        connection-timeout: ${FEIGN_CLIENT_CONNECT_TIMEOUT:1000}
         time-to-live: ${FEIGN_HTTPCLIENT_TIME_TO_LIVE:300}
         time-to-live-unit: ${FEIGN_HTTPCLIENT_TIME_TO_LIVE_UNIT:SECONDS}
   datasource:
@@ -18,7 +23,7 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME:user}
     password: ${SPRING_DATASOURCE_PASSWORD:pass}
     hikari:
-      maximum-pool-size: ${MAX_POOL_SIZE:20}
+      maximum-pool-size: ${MAX_POOL_SIZE:100}
   liquibase:
     change-log: classpath:/db/changelog/changelog-master.yaml
   docker:
@@ -41,27 +46,20 @@ app:
   async:
     task:
       retry-delay-seconds:  ${APP_TASK_RETRY_DELAY_SECONDS:10}
-      retryable-exceptions: ${APP_TASK_RETRYABLE_EXCEPTIONS:feign.RetryableException,java.net.SocketTimeoutException,java.io.IOException}
+      max-attempts: ${APP_TASK_MAX_ATTEMPTS:5}
+      retryable-exceptions: ${APP_TASK_RETRYABLE_EXCEPTIONS:feign.RetryableException,feign.FeignException$InternalServerError,java.net.SocketTimeoutException,java.io.IOException,jakarta.persistence.OptimisticLockException,org.springframework.orm.ObjectOptimisticLockingFailureException}
       non-retryable-exceptions: ${APP_TASK_NON_RETRYABLE_EXCEPTIONS:feign.FeignException$BadRequest,feign.FeignException$Unauthorized,feign.FeignException$Forbidden,feign.FeignException$NotFound,java.lang.IllegalArgumentException,java.lang.IllegalStateException}
       scheduler:
         batch-size: ${APP_TASK_BATCH_SIZE:100}
-        fixed-delay-ms: ${APP_TASK_PROCESSING_DELAY_MS:1000}
+        fixed-delay-ms: ${APP_TASK_PROCESSING_DELAY_MS:100}
         in-progress-timeout-minutes: ${APP_TASK_IN_PROGRESS_TIMEOUT_MINUTES:5}
       thread-pool:
-        core-pool-size: ${APP_TASK_THREAD_POOL_CORE_POOL_SIZE:10}
-        max-pool-size: ${APP_TASK_THREAD_POOL_MAX_POOL_SIZE:50}
+        core-pool-size: ${APP_TASK_THREAD_POOL_CORE_POOL_SIZE:100}
+        max-pool-size: ${APP_TASK_THREAD_POOL_MAX_POOL_SIZE:100}
         keep-alive-seconds: ${APP_TASK_THREAD_POOL_KEEP_ALIVE_SECONDS:60}
         queue-capacity: ${APP_TASK_THREAD_POOL_QUEUE_CAPACITY:1000}
         await-termination-seconds: ${APP_TASK_THREAD_POOL_AWAIT_TERMINATION_SECONDS:120}
         thread-name-prefix: ${APP_TASK_THREAD_POOL_THREAD_NAME_PREFIX:async-task-pool-}
-    io:
-      thread-pool:
-        core-pool-size: ${APP_IO_THREAD_POOL_CORE_POOL_SIZE:5}
-        max-pool-size: ${APP_IO_THREAD_POOL_MAX_POOL_SIZE:25}
-        keep-alive-seconds: ${APP_IO_THREAD_POOL_KEEP_ALIVE_SECONDS:30}
-        queue-capacity: ${APP_IO_THREAD_POOL_QUEUE_CAPACITY:100}
-        await-termination-seconds: ${APP_IO_THREAD_POOL_AWAIT_TERMINATION_SECONDS:120}
-        thread-name-prefix: ${APP_IO_THREAD_POOL_THREAD_NAME_PREFIX:async-io-pool-}
 
 # настройки Swagger
 springdoc:

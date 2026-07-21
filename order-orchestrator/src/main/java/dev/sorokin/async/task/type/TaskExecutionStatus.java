@@ -1,5 +1,7 @@
 package dev.sorokin.async.task.type;
 
+import dev.sorokin.domain.type.PaymentStatus;
+import java.math.BigDecimal;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

@@ -12,18 +12,16 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class ErrorTypeClassifier {
+    private static final int MAX_CAUSE_DEPTH = 10;
 
-    private final TaskAsyncProperties properties;
+    private final Set<Class<?>> retryableExceptionClasses;
+    private final Set<Class<?>> nonRetryableExceptionClasses;
 
-    private Set<Class<?>> retryableExceptionClasses = new HashSet<>();
-    private Set<Class<?>> nonRetryableExceptionClasses = new HashSet<>();
 
-    @PostConstruct
-    public void init() {
-        retryableExceptionClasses = loadClasses(properties.getRetryableExceptions());
-        nonRetryableExceptionClasses = loadClasses(properties.getNonRetryableExceptions());
+    public ErrorTypeClassifier(TaskAsyncProperties properties) {
+        this.retryableExceptionClasses = loadClasses(properties.getRetryableExceptions());
+        this.nonRetryableExceptionClasses = loadClasses(properties.getNonRetryableExceptions());
 
         log.info("Loaded retryable exceptions: {}", retryableExceptionClasses.size());
         log.info("Loaded non-retryable exceptions: {}", nonRetryableExceptionClasses.size());
@@ -31,8 +29,9 @@ public class ErrorTypeClassifier {
 
     public TaskExecutionStatus classify(Throwable ex) {
         Throwable current = ex;
+        int depth = 0;
 
-        while (current != null) {
+        while (current != null && depth < MAX_CAUSE_DEPTH) {
             if (matchesAny(current, retryableExceptionClasses)) {
                 return TaskExecutionStatus.FAILED_RETRYABLE;
             }
@@ -42,9 +41,14 @@ public class ErrorTypeClassifier {
             }
 
             current = current.getCause();
+            depth++;
         }
 
-        return TaskExecutionStatus.FAILED_NON_RETRYABLE;
+        if (depth >= MAX_CAUSE_DEPTH) {
+            log.warn("Reached max cause depth ({}) for exception: {}", MAX_CAUSE_DEPTH, ex.getClass().getName());
+        }
+
+        return TaskExecutionStatus.FAILED_RETRYABLE;
     }
 
     private boolean matchesAny(Throwable ex, Set<Class<?>> exceptionClasses) {
@@ -69,6 +73,7 @@ public class ErrorTypeClassifier {
                 classes.add(clazz);
             } catch (ClassNotFoundException e) {
                 log.error("Exception class not found in async task configuration: {}", className, e);
+                throw new IllegalArgumentException("Exception class not found in async task configuration: " + className);
             }
         }
 

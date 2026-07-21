@@ -1,7 +1,7 @@
 package dev.sorokin.async.config;
 
-import dev.sorokin.async.config.properties.IOThreadPoolProperties;
 import dev.sorokin.async.config.properties.TaskThreadPoolProperties;
+import java.util.concurrent.ThreadPoolExecutor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,9 +12,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 public class AsyncConfiguration {
 
     private final TaskThreadPoolProperties taskThreadPoolProperties;
-    private final IOThreadPoolProperties ioThreadPoolProperties;
 
-    @Bean
+    @Bean("taskThreadPool")
     ThreadPoolTaskExecutor taskThreadPool() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
 
@@ -24,23 +23,10 @@ public class AsyncConfiguration {
         executor.setQueueCapacity(taskThreadPoolProperties.getQueueCapacity());
         executor.setAwaitTerminationSeconds(taskThreadPoolProperties.getAwaitTerminationSeconds());
         executor.setThreadNamePrefix(taskThreadPoolProperties.getThreadNamePrefix());
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.AbortPolicy());
 
         executor.initialize();
         return executor;
     }
 
-    @Bean
-    ThreadPoolTaskExecutor ioThreadPool() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-
-        executor.setCorePoolSize(ioThreadPoolProperties.getCorePoolSize());
-        executor.setMaxPoolSize(ioThreadPoolProperties.getMaxPoolSize());
-        executor.setKeepAliveSeconds(ioThreadPoolProperties.getKeepAliveSeconds());
-        executor.setQueueCapacity(ioThreadPoolProperties.getQueueCapacity());
-        executor.setAwaitTerminationSeconds(ioThreadPoolProperties.getAwaitTerminationSeconds());
-        executor.setThreadNamePrefix(ioThreadPoolProperties.getThreadNamePrefix());
-
-        executor.initialize();
-        return executor;
-    }
 }

@@ -9,21 +9,17 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.math.BigDecimal;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.hibernate.annotations.JdbcType;
-import org.hibernate.dialect.PostgreSQLEnumJdbcType;
-
 
 @Entity
 @Table(name = "orders")
 @Getter
-@Setter
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
@@ -49,9 +45,54 @@ public class OrderEntity {
     @Column(name = "captured_amount", precision = 10, scale = 2)
     private BigDecimal capturedAmount;
 
-    @JdbcType(PostgreSQLEnumJdbcType.class)
+    @Builder.Default
     @Column(name = "payment_status", nullable = false)
     @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus = PaymentStatus.NEW;
 
+    @Column(name = "authorization_id")
+    private UUID authorizationId;
+
+    @Column(name = "failure_reason")
+    private String failureReason;
+
+    @Version
+    @Column(name = "version", nullable = false)
+    private long version;
+
+    public void markAuthorized(BigDecimal authorizedAmount, UUID authorizationId) {
+        this.authorizationId = authorizationId;
+        this.authorizedAmount = authorizedAmount;
+        this.paymentStatus = PaymentStatus.AUTHORIZED;
+    }
+
+    public void markAwaitingCapture() {
+        this.paymentStatus = PaymentStatus.AWAITING_CAPTURE;
+    }
+
+    public void markSucceedPaid(BigDecimal capturedAmount) {
+        this.capturedAmount = capturedAmount;
+        this.paymentStatus = PaymentStatus.SUCCEED_PAID;
+    }
+
+    public void markWithStatus(PaymentStatus paymentStatus) {
+        this.paymentStatus = paymentStatus;
+    }
+
+    public void markFailed(PaymentStatus paymentStatus, String failureReason) {
+        this.paymentStatus = paymentStatus;
+        this.failureReason = failureReason;
+    }
+
+    public void markFinalAmount(BigDecimal finalAmount) {
+        this.finalAmount = finalAmount;
+    }
+
+    public static OrderEntity createNew(String address, BigDecimal clientEstimate) {
+        return OrderEntity.builder()
+                .address(address)
+                .clientEstimate(clientEstimate)
+                .paymentStatus(PaymentStatus.NEW)
+                .build();
+    }
 }

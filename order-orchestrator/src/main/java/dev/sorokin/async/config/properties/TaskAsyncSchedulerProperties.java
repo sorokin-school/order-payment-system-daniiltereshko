@@ -15,13 +15,13 @@ public class TaskAsyncSchedulerProperties {
 
     @Min(10)
     @NotNull
-    private Long fixedDelayMs = 5000L;
+    private Long fixedDelayMs;
 
     @Min(1)
     @NotNull
-    private Integer inProgressTimeoutMinutes = 5;
+    private Integer inProgressTimeoutMinutes;
 
     @Min(10)
     @NotNull
-    private Integer batchSize = 100;
+    private Integer batchSize;
 }

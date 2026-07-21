@@ -4,7 +4,6 @@ import dev.sorokin.async.AsyncTaskDispatcher;
 import dev.sorokin.async.config.properties.TaskAsyncSchedulerProperties;
 import dev.sorokin.async.task.entity.TaskEntity;
 import dev.sorokin.async.task.service.TaskService;
-import java.time.OffsetDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,9 +33,6 @@ public class AsyncTaskScheduler {
 
     private List<TaskEntity> fetchTaskForProcessing() {
         final var batchSize = taskAsyncSchedulerProperties.getBatchSize();
-        final var inProgressTimeoutThreshold = OffsetDateTime.now()
-                .minusMinutes(taskAsyncSchedulerProperties.getInProgressTimeoutMinutes());
-
-        return tasksService.claimTasks(batchSize, inProgressTimeoutThreshold);
+        return tasksService.claimTasks(batchSize);
     }
 }

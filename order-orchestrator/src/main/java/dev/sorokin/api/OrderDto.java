@@ -11,7 +11,9 @@ public record OrderDto(
         UUID orderId,
         String address,
         BigDecimal clientEstimate,
+        BigDecimal authorizedAmount,
         BigDecimal finalAmount,
         BigDecimal capturedAmount,
-        PaymentStatus paymentStatus
+        PaymentStatus paymentStatus,
+        String failureReason
 ) { }

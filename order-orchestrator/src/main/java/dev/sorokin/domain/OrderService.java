@@ -2,7 +2,7 @@ package dev.sorokin.domain;
 
 import dev.sorokin.api.OrderCreateRequestDto;
 import dev.sorokin.async.task.service.TaskService;
-import dev.sorokin.domain.type.PaymentStatus;
+import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -19,30 +19,45 @@ public class OrderService {
     private final OrderJpaRepository orderRepository;
 
     @Transactional
-    public void saveOrder(OrderEntity order) {
+    public void markAuthorized(UUID orderId, BigDecimal authorizedAmount, UUID authorizationId) {
+        OrderEntity order = requireOrder(orderId);
+        order.markAuthorized(authorizedAmount, authorizationId);
         orderRepository.save(order);
     }
 
     @Transactional
-    public OrderEntity createOrder(
-            OrderCreateRequestDto requestDto
-    ) {
-        var entity = OrderEntity.builder()
-                .address(requestDto.address())
-                .paymentStatus(PaymentStatus.NEW)
-                .clientEstimate(requestDto.clientEstimate())
-                .build();
+    public void markAwaitingCapture(UUID orderId) {
+        OrderEntity order = requireOrder(orderId);
+        order.markAwaitingCapture();
+        orderRepository.save(order);
+    }
+
+    @Transactional
+    public void markFinalAmount(UUID orderId, BigDecimal finalAmount) {
+        OrderEntity order = requireOrder(orderId);
+        order.markFinalAmount(finalAmount);
+        orderRepository.save(order);
+    }
+
+    @Transactional
+    public OrderEntity createOrder(OrderCreateRequestDto requestDto) {
+        var entity = OrderEntity.createNew(requestDto.getAddress(), requestDto.getClientEstimate());
 
         var savedOrder = orderRepository.save(entity);
         log.info("Order created with id={}, clientEstimate={}",
                 savedOrder.getId(), savedOrder.getClientEstimate());
 
-        taskService.createTaskForOrder(entity);
+        taskService.createTaskForOrder(savedOrder);
         return savedOrder;
     }
 
     @Transactional(readOnly = true)
     public Optional<OrderEntity> findOrder(UUID id) {
         return orderRepository.findById(id);
+    }
+
+    private OrderEntity requireOrder(UUID orderId) {
+        return orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalStateException("Order not found: " + orderId));
     }
 }

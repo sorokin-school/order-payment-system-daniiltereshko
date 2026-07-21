@@ -2,10 +2,10 @@ databaseChangeLog:
   - include:
       file: classpath:db/changelog/sql/001-init-orders-table.sql
   - include:
-      file: classpath:db/changelog/sql/002-add-columns-to-orders-table.sql
+      file: classpath:db/changelog/sql/003-add-columns-to-orders-table.sql
   - include:
-      file: classpath:db/changelog/sql/003-init-tasks-table.sql
+      file: classpath:db/changelog/sql/004-init-tasks-table.sql
   - include:
-      file: classpath:db/changelog/sql/004-create-index-tasks-table-1.sql
+      file: classpath:db/changelog/sql/005-add-version-and-locked-until.sql
   - include:
-      file: classpath:db/changelog/sql/005-add-payment-status-enum-type-value.sql
+      file: classpath:db/changelog/sql/006-add-failure-reason-and-task-step.sql

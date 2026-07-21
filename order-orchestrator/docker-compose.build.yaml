@@ -1,0 +1,6 @@
+services:
+  order-orchestrator:
+    image: order-orchestrator:latest
+    build:
+      context: ..
+      dockerfile: order-orchestrator/Dockerfile

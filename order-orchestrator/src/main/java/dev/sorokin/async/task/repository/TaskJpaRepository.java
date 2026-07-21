@@ -14,14 +14,14 @@ public interface TaskJpaRepository extends JpaRepository<TaskEntity, UUID> {
     @Query(value = """
         SELECT t.id FROM tasks t
         WHERE t.status = 'NEW'
-        OR (t.status = 'FAILED_RETRYABLE' AND t.next_attempt_at <= NOW())
-        OR (t.status = 'IN_PROGRESS' AND t.updated_at <= :inProgressTimeoutThreshold)
+        OR (t.status = 'FAILED_RETRYABLE' AND t.next_attempt_at <= :now)
+        OR (t.status = 'IN_PROGRESS' AND (t.locked_until IS NULL OR t.locked_until <= :now))
         ORDER BY t.created_at
         LIMIT :limit
         FOR UPDATE SKIP LOCKED
         """, nativeQuery = true)
     List<UUID> lockTaskIdsForProcessing(
-            @Param("inProgressTimeoutThreshold") OffsetDateTime inProgressTimeoutThreshold,
+            @Param("now") OffsetDateTime now,
             @Param("limit") int limit
     );
 
@@ -32,5 +32,4 @@ public interface TaskJpaRepository extends JpaRepository<TaskEntity, UUID> {
         ORDER BY t.createdAt
         """)
     List<TaskEntity> findAllByIdInWithOrder(@Param("ids") Collection<UUID> ids);
-
 }
