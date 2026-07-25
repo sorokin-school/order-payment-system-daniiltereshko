@@ -1,0 +1,27 @@
+package dev.sorokin.async.config.properties;
+
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
+
+@Getter
+@Setter
+@Validated
+@ConfigurationProperties(prefix = "app.async.task.scheduler")
+public class TaskAsyncSchedulerProperties {
+
+    @Min(10)
+    @NotNull
+    private Long fixedDelayMs;
+
+    @Min(1)
+    @NotNull
+    private Integer inProgressTimeoutMinutes;
+
+    @Min(10)
+    @NotNull
+    private Integer batchSize;
+}

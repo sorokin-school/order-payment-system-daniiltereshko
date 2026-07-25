@@ -2,15 +2,18 @@ package dev.sorokin.api;
 
 import dev.sorokin.domain.OrderEntity;
 import dev.sorokin.domain.OrderService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
 @Slf4j
+@Validated
 @AllArgsConstructor
 @RestController
 @RequestMapping("/order")
@@ -20,11 +23,11 @@ public class OrderController {
 
     @PostMapping
     public ResponseEntity<OrderDto> createOrder(
-            @RequestBody OrderCreateRequestDto orderCreateRequestDto
+           @Valid @RequestBody OrderCreateRequestDto orderCreateRequestDto
     ) {
         log.info("Received request to create order: request={}", orderCreateRequestDto);
         var created = orderService.createOrder(orderCreateRequestDto);
-        log.info("Created order: created={}", created);
+        log.info("Created order: created with id={}", created.getId());
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(mapEntityToDto(created));
@@ -44,8 +47,14 @@ public class OrderController {
 
     private OrderDto mapEntityToDto(OrderEntity order) {
         return OrderDto.builder()
-                .id(order.getId())
+                .orderId(order.getId())
                 .address(order.getAddress())
+                .clientEstimate(order.getClientEstimate())
+                .authorizedAmount(order.getAuthorizedAmount())
+                .finalAmount(order.getFinalAmount())
+                .capturedAmount(order.getCapturedAmount())
+                .paymentStatus(order.getPaymentStatus())
+                .failureReason(order.getFailureReason())
                 .build();
     }
 }
